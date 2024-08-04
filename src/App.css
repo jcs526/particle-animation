@@ -32,7 +32,15 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
+}
+
+#simulationCanvas {
+  border: 2px solid white;
+  /* 테두리 두께와 색상 설정 */
+  display: block;
+  margin: 0 auto;
 }
