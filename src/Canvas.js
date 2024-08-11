@@ -1,4 +1,3 @@
-// src/Canvas.js
 import React, { useRef, useEffect } from 'react';
 
 const Canvas = () => {
@@ -8,6 +7,7 @@ const Canvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const particles = [];
+    const canvasRadius = canvas.width / 2;
 
     class Particle {
       constructor(x, y, radius, velocityX, velocityY) {
@@ -30,13 +30,15 @@ const Canvas = () => {
         this.x += this.velocityX;
         this.y += this.velocityY;
 
-        // 벽 충돌 감지
-        if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
-          this.velocityX = -this.velocityX;
-        }
-
-        if (this.y - this.radius < 0 || this.y + this.radius > canvas.height) {
-          this.velocityY = -this.velocityY;
+        // 원형 경계 내 충돌 감지
+        const distanceFromCenter = Math.sqrt(
+          (this.x - canvasRadius) ** 2 + (this.y - canvasRadius) ** 2
+        );
+        if (distanceFromCenter + this.radius > canvasRadius) {
+          // 경계를 넘으면 속도를 반전시킴
+          const angle = Math.atan2(this.y - canvasRadius, this.x - canvasRadius);
+          this.velocityX = -Math.cos(angle) * Math.abs(this.velocityX);
+          this.velocityY = -Math.sin(angle) * Math.abs(this.velocityY);
         }
 
         // 입자 충돌 감지
@@ -60,8 +62,10 @@ const Canvas = () => {
 
     for (let i = 0; i < 10; i++) {
       const radius = 10;
-      const x = Math.random() * (canvas.width - radius * 2) + radius;
-      const y = Math.random() * (canvas.height - radius * 2) + radius;
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * (canvasRadius - radius);
+      const x = canvasRadius + Math.cos(angle) * distance;
+      const y = canvasRadius + Math.sin(angle) * distance;
       const velocityX = (Math.random() - 0.5) * 2;
       const velocityY = (Math.random() - 0.5) * 2;
       particles.push(new Particle(x, y, radius, velocityX, velocityY));
@@ -69,6 +73,10 @@ const Canvas = () => {
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.arc(canvasRadius, canvasRadius, canvasRadius, 0, Math.PI * 2);
+      ctx.clip(); // 원형 영역으로 클립
+
       particles.forEach(particle => particle.update(particles));
       requestAnimationFrame(animate);
     };
@@ -80,8 +88,16 @@ const Canvas = () => {
     <canvas
       ref={canvasRef}
       width={800}
-      height={600}
-      style={{ border: '2px solid black' }}
+      height={800}
+      style={{
+        border: '2px solid black',
+        borderRadius: '50%',
+        width: '800px',
+        height: '800px',
+        display: 'block',
+        margin: '0 auto',
+        overflow: 'hidden'
+      }}
     />
   );
 };
