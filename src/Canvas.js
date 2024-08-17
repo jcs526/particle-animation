@@ -161,10 +161,13 @@ const Canvas = () => {
         ctx.closePath();
 
         const frameData = simulationData[frameIndex];
-        frameData.forEach(p => {
+        frameData.forEach((p, i) => {
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = 'blue';
+          if (i === 0)
+            ctx.fillStyle = 'red';
+          else
+            ctx.fillStyle = 'blue';
           ctx.fill();
           ctx.closePath();
         });
