@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 
 const Canvas = () => {
   const canvasRef = useRef(null);
+  const redCanvasRef = useRef(null);
   const [simulationData, setSimulationData] = useState([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -145,11 +146,14 @@ const Canvas = () => {
   const renderSimulation = () => {
     if (isSimulationReady) {
       const canvas = canvasRef.current;
+      const redCanvas = redCanvasRef.current;
       const ctx = canvas.getContext('2d');
+      const redCtx = redCanvas.getContext('2d');
       const canvasRadius = canvas.width / 2;
       let frameIndex = 0;
 
       const animate = () => {
+        // 파란색 입자들이 그려지는 메인 캔버스는 매 프레임마다 초기화
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // 원형 경계선 그리기
@@ -162,14 +166,12 @@ const Canvas = () => {
 
         const frameData = simulationData[frameIndex];
         frameData.forEach((p, i) => {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          if (i === 0)
-            ctx.fillStyle = 'red';
-          else
-            ctx.fillStyle = 'blue';
-          ctx.fill();
-          ctx.closePath();
+          const targetCtx = i === 0 ? redCtx : ctx; // 첫 번째 입자는 redCtx, 나머지는 ctx 사용
+          targetCtx.beginPath();
+          targetCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          targetCtx.fillStyle = i === 0 ? 'red' : 'blue';
+          targetCtx.fill();
+          targetCtx.closePath();
         });
 
         frameIndex++;
@@ -191,8 +193,16 @@ const Canvas = () => {
   }, [isSimulationReady]);
 
   return (
-    <div>
-      <button onClick={startSimulation} disabled={isCalculating || isSimulationReady}>
+    <div style={{ position: 'relative', width: '800px', height: '800px', margin: '20px auto' }}>
+      <button 
+        onClick={startSimulation} 
+        disabled={isCalculating || isSimulationReady}
+        style={{
+          position: 'relative',
+          zIndex: 3, // 버튼을 가장 위에 위치시킴
+          marginBottom: '20px',
+        }}
+      >
         {isCalculating ? 'Calculating...' : 'Start Simulation'}
       </button>
       <div>Progress: {Math.round(progress)}%</div>
@@ -201,8 +211,22 @@ const Canvas = () => {
         width={800}
         height={800}
         style={{
-          display: 'block',
-          margin: '20px auto',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: 1,
+        }}
+      />
+      <canvas
+        ref={redCanvasRef}
+        width={800}
+        height={800}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: 2,
+          pointerEvents: 'none', // 클릭 이벤트가 이 캔버스를 통과하도록 설정
         }}
       />
     </div>
